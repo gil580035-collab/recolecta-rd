@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RECOLECTA-RD</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+    crossorigin=""/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: opacity 800ms ease-in-out;
+      z-index: -2;
+    }
+    #bg-a { opacity: 1; }
+    #bg-b { opacity: 0; }
+
+    .foreground-content {
+      position: relative;
+      z-index: 0;
+    }
+
+    header {
+      background: rgba(34, 139, 34, 0.95);
+      color: white;
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      transition: opacity 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-links a:hover {
+      opacity: 0.8;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      min-height: calc(100vh - 200px);
+    }
+
+    section {
+      margin-bottom: 4rem;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, rgba(34, 139, 34, 0.1), rgba(144, 238, 144, 0.1));
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      color: #2d7a3d;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      color: #2d7a3d;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    h3 {
+      color: #228B22;
+      margin-bottom: 1rem;
+    }
+
+    button, .cta-button {
+      background: #228B22;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s, transform 0.2s;
+      margin: 0.5rem;
+    }
+
+    button:hover, .cta-button:hover {
+      background: #1a6b1a;
+      transform: translateY(-2px);
+    }
+
+    button:active, .cta-button:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-link {
+      background: none;
+      color: #228B22;
+      text-decoration: underline;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-link:hover {
+      background: rgba(34, 139, 34, 0.1);
+      transform: none;
+    }
+
+    .card-set {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+      background: none;
+      border: none;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #2d7a3d;
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #228B22;
+    }
+
+    .form-group input.error,
+    .form-group textarea.error,
+    .form-group select.error {
+      border-color: #dc3545;
+    }
+
+    .form-error {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .form-links {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    #map {
+      width: 100%;
+      height: 500px;
+      border-radius: 10px;
+      margin-top: 1rem;
+      border: 2px solid #ddd;
+    }
+
+    .reporte-item, .solicitud-item, .brigada-item {
+      background: #f9f9f9;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-left: 4px solid #228B22;
+      border-radius: 5px;
+    }
+
+    .reporte-item h4, .solicitud-item h4, .brigada-item h4 {
+      color: #2d7a3d;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+
+    .status-pendiente {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-proceso {
+      background: #cfe2ff;
+      color: #084298;
+    }
+
+    .status-completado {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #666;
+      transition: all 0.3s;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    .tab:hover {
+      color: #228B22;
+      background: rgba(34, 139, 34, 0.05);
+      transform: none;
+    }
+
+    .tab.active {
+      color: #228B22;
+      border-bottom-color: #228B22;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #feedback {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1001;
+      display: none;
+      min-width: 300px;
+    }
+
+    #feedback.success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+      display: block;
+    }
+
+    #feedback.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+      display: block;
+    }
+
+    #feedback.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border-left: 4px solid #17a2b8;
+      display: block;
+    }
+
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      margin-top: 0.5rem;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .image-preview.show {
+      display: block;
+    }
+
+    footer {
+      background: #228B22;
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 4rem;
+    }
+
+    .auth-required {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #666;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        justify-content: center;
+      }
+
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+
+      main {
+        padding: 1rem;
+      }
+
+      #feedback {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+      }
+
+      #map {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="bg-a" class="bg-layer"></div>
+  <div id="bg-b" class="bg-layer"></div>
+
+  <div class="foreground-content">
+    <header>
+      <nav>
+        <div class="logo">♻️ RECOLECTA-RD</div>
+        <ul class="nav-links">
+          <li><a onclick="scrollToSection('hero')">Inicio</a></li>
+          <li><a onclick="scrollToSection('servicios')">Servicios</a></li>
+          <li><a onclick="scrollToSection('mis-solicitudes')">Mis Solicitudes</a></li>
+          <li><a onclick="scrollToSection('reportes')">Reportes</a></li>
+          <li><a onclick="scrollToSection('contactos')">Contactos</a></li>
+          <li class="user-info" id="userSection">
+            <span id="userDisplay">Visitante</span>
+            <button id="btnAuth">Ingresar</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section id="hero" class="hero">
+        <h1>🌿 Bienvenido a RECOLECTA-RD</h1>
+        <p style="font-size: 1.15em; color: #2d7a3d;">
+          Tu solución confiable para la recolección de residuos en la República Dominicana.
+        </p>
+        <button class="cta-button" id="btnReportarProblematica">
+          Reportar problemáticas
+        </button>
+      </section>
+
+      <section id="servicios">
+        <h2>🌱 Nuestros Servicios</h2>
+        <div class="card-set">
+          <div class="card">
+            <span style="font-size: 3em;">♻️</span>
+            <h3>Recolección de Residuos</h3>
+            <p>Solicita recolección a domicilio de residuos reciclables y no reciclables.</p>
+            <button onclick="servicioRecoleccion()">Solicitar Recolección</button>
+          </div>
+          <div class="card">
+            <span style="font-size: 3em;">📍</span>
+            <h3>Centros de Acopio</h3>
+            <p>Visualiza en el mapa los puntos para llevar materiales reciclables.</p>
+            <button onclick="verMapa()">Ver Mapa</button>
+          </div>
+          <div class="card">
+            <span style="font-size: 3em;">🚯</span>
+            <h3>Limpieza de Espacios</h3>
+            <p>Coordinamos brigadas para recuperar áreas afectadas por residuos.</p>
+            <button onclick="servicioBrigada()">Coordinar Brigada</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="mis-solicitudes">
+        <h2>📋 Mis Solicitudes</h2>
+        <div id="misSolicitudesContent"></div>
+      </section>
+
+      <section id="reportes">
+        <h2>📋 Reporte de Problemáticas Ambientales</h2>
+
+        <div style="margin-bottom: 18px;">
+          <button onclick="mostrarReportes()">Ver Todos los Reportes</button>
+          <button onclick="nuevoReporte()">Agregar Reporte</button>
+          <button onclick="actualizarTodo()">🔄 Actualizar</button>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label for="ciudad">Filtrar por Ciudad:</label>
+          <select id="ciudad" onchange="mostrarReportes()" style="padding: 0.5rem; border-radius: 5px; border: 2px solid #ddd;">
+            <option value="Todas">Todas las ciudades</option>
+          </select>
+        </div>
+
+        <div id="listaReportes"></div>
+
+        <h3 style="margin-top: 30px;">🗺️ Mapa Interactivo - Centros de Acopio</h3>
+        <div id="map"></div>
+      </section>
+
+      <section id="contactos">
+        <h2>📞 Contacto</h2>
+        <div class="card-set">
+          <div class="card">
+            <span style="font-size: 2.5em;">📧</span>
+            <h4>Correo Electrónico</h4>
+            <p>recolectard07@gmail.com</p>
+          </div>
+          <div class="card">
+            <span style="font-size: 2.5em;">📞</span>
+            <h4>Teléfono</h4>
+            <p>(809) 880-3436</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      © 2025 RECOLECTA-RD. Todos los derechos reservados.
+    </footer>
+  </div>
+
+  <!-- Modal Auth (Login/Registro) -->
+  <div id="modalAuth" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModal('modalAuth')">×</button>
+      <div id="authContent"></div>
+    </div>
+  </div>
+
+  <!-- Modal Recolección -->
+  <div id="modalRecoleccion" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModal('modalRecoleccion')">×</button>
+      <h2>Solicitar Recolección de Residuos</h2>
+      <form onsubmit="return false;">
+        <div class="form-group">
+          <label>Nombre completo *</label>
+          <input type="text" id="recolNombre" required>
+          <div class="form-error" id="errorRecolNombre"></div>
+        </div>
+        <div class="form-group">
+          <label>Dirección completa *</label>
+          <input type="text" id="recolDireccion" required>
+          <div class="form-error" id="errorRecolDireccion"></div>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input type="tel" id="recolTelefono" required placeholder="809-555-1234">
+          <div class="form-error" id="errorRecolTelefono"></div>
+        </div>
+        <div class="form-group">
+          <label>Tipo de residuos *</label>
+          <select id="recolTipo" required>
+            <option value="">Selecciona...</option>
+            <option value="reciclables">Reciclables</option>
+            <option value="no-reciclables">No reciclables</option>
+            <option value="ambos">Ambos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad aproximada</label>
+          <select id="recolCantidad">
+            <option value="pequeña">Pequeña (1-2 bolsas)</option>
+            <option value="mediana">Mediana (3-5 bolsas)</option>
+            <option value="grande">Grande (más de 5 bolsas)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fecha preferida</label>
+          <input type="date" id="recolFecha">
+        </div>
+        <div class="form-group">
+          <label>Notas adicionales</label>
+          <textarea id="recolNotas" rows="3"></textarea>
+        </div>
+        <button onclick="submitRecoleccion()">Enviar Solicitud</button>
+        <button class="btn-secondary" onclick="cerrarModal('modalRecoleccion')">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Brigada -->
+  <div id="modalBrigada" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModal('modalBrigada')">×</button>
+      <h2>Coordinar Brigada de Limpieza</h2>
+      <form onsubmit="return false;">
+        <div class="form-group">
+          <label>Nombre/Organización *</label>
+          <input type="text" id="brigNombre" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input type="tel" id="brigTelefono" required placeholder="809-555-1234">
+        </div>
+        <div class="form-group">
+          <label>Lugar de intervención *</label>
+          <input type="text" id="brigLugar" required>
+        </div>
+        <div class="form-group">
+          <label>Ciudad *</label>
+          <select id="brigCiudad" required>
+            <option value="">Selecciona...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fecha propuesta</label>
+          <input type="date" id="brigFecha">
+        </div>
+        <div class="form-group">
+          <label>Número de participantes</label>
+          <input type="number" id="brigPersonas" min="1">
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="brigDescripcion" rows="3"></textarea>
+        </div>
+        <button onclick="submitBrigada()">Enviar Solicitud</button>
+        <button class="btn-secondary" onclick="cerrarModal('modalBrigada')">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Reporte -->
+  <div id="modalReporte" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModal('modalReporte')">×</button>
+      <h2>Nuevo Reporte Ambiental</h2>
+      <form onsubmit="return false;">
+        <div class="form-group">
+          <label>Título *</label>
+          <input type="text" id="repTitulo" required>
+        </div>
+        <div class="form-group">
+          <label>Ciudad *</label>
+          <select id="repCiudad" required>
+            <option value="">Selecciona...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descripción *</label>
+          <textarea id="repDescripcion" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Ubicación específica</label>
+          <input type="text" id="repUbicacion">
+        </div>
+        <div class="form-group">
+          <label>Foto (opcional)</label>
+          <input type="file" id="repFoto" accept="image/*" onchange="previewImagen()">
+          <img id="repFotoPreview" class="image-preview">
+        </div>
+        <button onclick="submitReporte()">Enviar Reporte</button>
+        <button class="btn-secondary" onclick="cerrarModal('modalReporte')">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="feedback"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+  <script>
+    let CONFIG = {};
+    let configCargada = false;
+    let bgIntervalId = null;
+
+    // Configuración por defecto
+    const CONFIG_DEFECTO = {
+      backgroundImages: [
+        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1600',
+        'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=1600',
+        'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1600'
+      ],
+      backgroundInterval: 5000,
+      mapCenter: [18.7357, -70.1627],
+      mapZoom: 8,
+      ciudades: [
+        "Santo Domingo", "Santiago", "La Vega", "San Cristóbal",
+        "San Francisco de Macorís", "Puerto Plata", "La Romana",
+        "San Pedro de Macorís", "Higüey", "Moca", "Bonao", "Bani"
+      ],
+      centrosAcopio: []
+    };
+
+    // Cargar configuración desde JSON
+    function cargarConfiguracion() {
+      return fetch('config.json')
+        .then(response => {
+          if (!response.ok) throw new Error('No se pudo cargar config.json');
+          return response.json();
+        })
+        .then(data => {
+          CONFIG = {
+            backgroundImages: data.backgroundImages || CONFIG_DEFECTO.backgroundImages,
+            backgroundInterval: data.backgroundInterval || CONFIG_DEFECTO.backgroundInterval,
+            mapCenter: data.mapCenter || CONFIG_DEFECTO.mapCenter,
+            mapZoom: data.mapZoom || CONFIG_DEFECTO.mapZoom,
+            ciudades: data.ciudades || CONFIG_DEFECTO.ciudades,
+            centrosAcopio: data.centrosAcopio || CONFIG_DEFECTO.centrosAcopio
+          };
+          configCargada = true;
+          console.log('✅ Configuración cargada desde config.json');
+          inicializarFondo();
+          return true;
+        })
+        .catch(error => {
+          console.error('❌ Error cargando config.json:', error);
+          CONFIG = CONFIG_DEFECTO;
+          configCargada = true;
+          console.log('⚠️ Usando configuración por defecto');
+          inicializarFondo();
+          return false;
+        });
+    }
+
+    // Inicializar fondo después de cargar CONFIG
+    function inicializarFondo() {
+      if (CONFIG.backgroundImages && CONFIG.backgroundImages.length > 0) {
+        bgLayerA.style.backgroundImage = `url("${CONFIG.backgroundImages[0]}")`;
+        if (bgIntervalId) clearInterval(bgIntervalId);
+        bgIntervalId = setInterval(changeBackground, CONFIG.backgroundInterval);
+      }
+    }
+
+    // Cargar configuración al iniciar
+    cargarConfiguracion();
+
+    let usuarioActual = null;
+    let map = null;
+    let mapaInicializado = false;
+
+    // ===== USUARIO =====
+    function cargarUsuario() {
+      const usuario = localStorage.getItem('recolecta_usuario');
+      if (usuario) {
+        try {
+          usuarioActual = JSON.parse(usuario);
+          actualizarUIUsuario();
+        } catch (e) {
+          usuarioActual = null;
+        }
+      }
+    }
+
+    function actualizarUIUsuario() {
+      const userDisplay = document.getElementById('userDisplay');
+      const btnAuth = document.getElementById('btnAuth');
+      
+      if (usuarioActual) {
+        userDisplay.textContent = `👤 ${usuarioActual.nombre}`;
+        btnAuth.textContent = 'Cerrar Sesión';
+        btnAuth.onclick = cerrarSesion;
+      } else {
+        userDisplay.textContent = 'Visitante';
+        btnAuth.textContent = 'Ingresar';
+        btnAuth.onclick = () => mostrarLogin();
+      }
+      
+      actualizarMisSolicitudes();
+    }
+
+    function cerrarSesion() {
+      if (confirm('¿Cerrar sesión?')) {
+        localStorage.removeItem('recolecta_usuario');
+        usuarioActual = null;
+        actualizarUIUsuario();
+        mostrarMensaje('Sesión cerrada', 'success');
+      }
+    }
+
+    function mostrarLogin() {
+      document.getElementById('authContent').innerHTML = `
+        <h2>Iniciar Sesión</h2>
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="loginEmail" required>
+          </div>
+          <div class="form-group">
+            <label>Contraseña *</label>
+            <input type="password" id="loginPassword" required>
+          </div>
+          <button onclick="submitLogin()">Ingresar</button>
+          <div class="form-links">
+            <button class="btn-link" onclick="mostrarRegistro()">¿No tienes cuenta? Regístrate</button>
+            <br>
+            <button class="btn-link" onclick="mostrarRecuperarPassword()">¿Olvidaste tu contraseña?</button>
+          </div>
+        </form>
+      `;
+      abrirModal('modalAuth');
+    }
+
+    function mostrarRegistro() {
+      document.getElementById('authContent').innerHTML = `
+        <h2>Crear Cuenta</h2>
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label>Nombre completo *</label>
+            <input type="text" id="regNombre" required>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="regEmail" required>
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="regTelefono" placeholder="809-555-1234">
+          </div>
+          <div class="form-group">
+            <label>Contraseña *</label>
+            <input type="password" id="regPassword" required>
+          </div>
+          <div class="form-group">
+            <label>Confirmar contraseña *</label>
+            <input type="password" id="regPassword2" required>
+          </div>
+          <button onclick="submitRegistro()">Registrarse</button>
+          <div class="form-links">
+            <button class="btn-link" onclick="mostrarLogin()">¿Ya tienes cuenta? Inicia sesión</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function mostrarRecuperarPassword() {
+      document.getElementById('authContent').innerHTML = `
+        <h2>Recuperar Contraseña</h2>
+        <p style="margin-bottom: 1rem; color: #666;">
+          Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.
+        </p>
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="recuperarEmail" required>
+          </div>
+          <button onclick="submitRecuperarPassword()">Enviar</button>
+          <div class="form-links">
+            <button class="btn-link" onclick="mostrarLogin()">Volver al inicio de sesión</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function submitLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      
+      if (!email || !password) {
+        mostrarMensaje('Completa todos los campos', 'error');
+        return;
+      }
+      
+      const usuarios = JSON.parse(localStorage.getItem('recolecta_usuarios') || '[]');
+      const usuario = usuarios.find(u => u.email === email && u.password === password);
+      
+      if (usuario) {
+        usuarioActual = { nombre: usuario.nombre, email: usuario.email };
+        localStorage.setItem('recolecta_usuario', JSON.stringify(usuarioActual));
+        cerrarModal('modalAuth');
+        actualizarUIUsuario();
+        mostrarMensaje(`¡Bienvenido ${usuario.nombre}!`, 'success');
+      } else {
+        mostrarMensaje('Email o contraseña incorrectos', 'error');
+      }
+    }
+
+    function submitRegistro() {
+      const nombre = document.getElementById('regNombre').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const telefono = document.getElementById('regTelefono').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const password2 = document.getElementById('regPassword2').value;
+      
+      if (!nombre || !email || !password) {
+        mostrarMensaje('Completa los campos obligatorios', 'error');
+        return;
+      }
+      
+      if (password !== password2) {
+        mostrarMensaje('Las contraseñas no coinciden', 'error');
+        return;
+      }
+      
+      if (password.length < 6) {
+        mostrarMensaje('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+      }
+      
+      const usuarios = JSON.parse(localStorage.getItem('recolecta_usuarios') || '[]');
+      
+      if (usuarios.find(u => u.email === email)) {
+        mostrarMensaje('Este email ya está registrado', 'error');
+        return;
+      }
+      
+      usuarios.push({ nombre, email, telefono, password });
+      localStorage.setItem('recolecta_usuarios', JSON.stringify(usuarios));
+      
+      usuarioActual = { nombre, email };
+      localStorage.setItem('recolecta_usuario', JSON.stringify(usuarioActual));
+      
+      cerrarModal('modalAuth');
+      actualizarUIUsuario();
+      mostrarMensaje('¡Cuenta creada exitosamente!', 'success');
+    }
+
+    function submitRecuperarPassword() {
+      const email = document.getElementById('recuperarEmail').value.trim();
+      
+      if (!email) {
+        mostrarMensaje('Ingresa tu email', 'error');
+        return;
+      }
+      
+      const usuarios = JSON.parse(localStorage.getItem('recolecta_usuarios') || '[]');
+      const usuario = usuarios.find(u => u.email === email);
+      
+      if (usuario) {
+        mostrarMensaje('Se ha enviado un enlace de recuperación a tu email', 'success');
+        setTimeout(() => {
+          cerrarModal('modalAuth');
+        }, 2000);
+      } else {
+        mostrarMensaje('No existe una cuenta con ese email', 'error');
+      }
+    }
+
+    // ===== BACKGROUND =====
+    let currentBgIndex = 0;
+    let isLayerA = true;
+    const bgLayerA = document.getElementById('bg-a');
+    const bgLayerB = document.getElementById('bg-b');
+
+    function changeBackground() {
+      currentBgIndex = (currentBgIndex + 1) % CONFIG.backgroundImages.length;
+      const nextImage = CONFIG.backgroundImages[currentBgIndex];
+
+      if (isLayerA) {
+        bgLayerB.style.backgroundImage = `url("${nextImage}")`;
+        bgLayerB.style.opacity = '1';
+        bgLayerA.style.opacity = '0';
+      } else {
+        bgLayerA.style.backgroundImage = `url("${nextImage}")`;
+        bgLayerA.style.opacity = '1';
+        bgLayerB.style.opacity = '0';
+      }
+      isLayerA = !isLayerA;
+    }
+
+    bgLayerA.style.backgroundImage = `url("${CONFIG.backgroundImages[0]}")`;
+    setInterval(changeBackground, CONFIG.backgroundInterval);
+
+    // ===== MAPA =====
+    function inicializarMapa() {
+      if (mapaInicializado || !L) return;
+      
+      try {
+        const mapElement = document.getElementById('map');
+        if (!mapElement) return;
+        
+        map = L.map('map').setView(CONFIG.mapCenter, CONFIG.mapZoom);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap',
+          maxZoom: 19
+        }).addTo(map);
+
+        const centros = CONFIG.centrosAcopio && CONFIG.centrosAcopio.length > 0 ? CONFIG.centrosAcopio : [
+          { nombre: "Centro Acopio Santo Domingo Este", lat: 18.4861, lng: -69.9312, tipos: "Plástico, Papel, Vidrio, Metal" },
+          { nombre: "Centro Acopio Santiago", lat: 19.4517, lng: -70.6970, tipos: "Plástico, Papel, Cartón" },
+          { nombre: "Centro Acopio La Vega", lat: 19.2231, lng: -70.5290, tipos: "Plástico, Vidrio, Metal" },
+          { nombre: "Centro Acopio San Cristóbal", lat: 18.4167, lng: -70.1000, tipos: "Papel, Cartón, Plástico" },
+          { nombre: "Centro Acopio Puerto Plata", lat: 19.7833, lng: -70.6833, tipos: "Plástico, Vidrio" },
+          { nombre: "Centro Acopio La Romana", lat: 18.4273, lng: -68.9728, tipos: "Todo tipo de reciclables" },
+          { nombre: "Centro Acopio San Pedro", lat: 18.4539, lng: -69.3028, tipos: "Plástico, Papel, Metal" },
+          { nombre: "Centro Acopio Higüey", lat: 18.6150, lng: -68.7078, tipos: "Plástico, Papel" }
+        ];
+
+        centros.forEach(centro => {
+          const horario = centro.horario || 'Lun-Sáb 8:00-17:00';
+          L.marker([centro.lat, centro.lng])
+            .addTo(map)
+            .bindPopup(`
+              <b>${centro.nombre}</b><br>
+              <strong>Acepta:</strong> ${centro.tipos}<br>
+              <small>Horario: ${horario}</small>
+            `);
+        });
+
+        setTimeout(() => { map.invalidateSize(); }, 300);
+        mapaInicializado = true;
+        console.log('✅ Mapa inicializado');
+      } catch (error) {
+        console.error('❌ Error mapa:', error);
+      }
+    }
+
+    function verMapa() {
+      scrollToSection('reportes');
+      setTimeout(() => {
+        const mapEl = document.getElementById('map');
+        if (mapEl) {
+          mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (!mapaInicializado) {
+          inicializarMapa();
+        }
+        if (map) {
+          setTimeout(() => map.invalidateSize(), 400);
+        }
+        mostrarMensaje('Haz clic en los marcadores para ver información', 'info');
+      }, 600);
+    }
+
+    // ===== VALIDACIONES =====
+    function validarEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validarTelefono(tel) {
+      return tel.replace(/\D/g, '').length === 10;
+    }
+
+    // ===== DATOS =====
+    function obtenerDatos(key) {
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    }
+
+    function guardarDatos(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function generarId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // ===== REPORTES =====
+    function mostrarReportes() {
+      const lista = document.getElementById('listaReportes');
+      const ciudad = document.getElementById('ciudad').value;
+      const reportes = obtenerDatos('recolecta_reportes');
+
+      if (reportes.length === 0) {
+        lista.innerHTML = '<p style="color: #666;">No hay reportes disponibles.</p>';
+        return;
+      }
+
+      const filtrados = ciudad === 'Todas' ? reportes : reportes.filter(r => r.ciudad === ciudad);
+
+      if (filtrados.length === 0) {
+        lista.innerHTML = '<p style="color: #666;">No hay reportes para esta ciudad.</p>';
+        return;
+      }
+
+      lista.innerHTML = filtrados.reverse().map(r => `
+        <div class="reporte-item">
+          <h4>${r.titulo} <span class="status-badge status-${r.estado}">${r.estado.toUpperCase()}</span></h4>
+          <p><strong>Ciudad:</strong> ${r.ciudad}</p>
+          ${r.ubicacion ? `<p><strong>Ubicación:</strong> ${r.ubicacion}</p>` : ''}
+          <p>${r.descripcion}</p>
+          ${r.foto ? `<img src="${r.foto}" style="max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 5px;">` : ''}
+          <small style="color: #666;">Por: ${r.usuario} | ${r.fecha}</small>
+        </div>
+      `).join('');
+    }
+
+    function nuevoReporte() {
+      if (!usuarioActual) {
+        mostrarMensaje('Debes iniciar sesión', 'info');
+        mostrarLogin();
+        return;
+      }
+      abrirModal('modalReporte');
+    }
+
+    function submitReporte() {
+      const titulo = document.getElementById('repTitulo').value.trim();
+      const ciudad = document.getElementById('repCiudad').value;
+      const descripcion = document.getElementById('repDescripcion').value.trim();
+      const ubicacion = document.getElementById('repUbicacion').value.trim();
+      const preview = document.getElementById('repFotoPreview');
+      
+      if (!titulo || !ciudad || !descripcion) {
+        mostrarMensaje('Completa los campos obligatorios', 'error');
+        return;
+      }
+      
+      const reportes = obtenerDatos('recolecta_reportes');
+      reportes.push({
+        id: generarId(),
+        titulo,
+        ciudad,
+        descripcion,
+        ubicacion,
+        foto: preview.classList.contains('show') ? preview.src : null,
+        usuario: usuarioActual.email,
+        fecha: new Date().toLocaleString('es-DO'),
+        estado: 'pendiente'
+      });
+      
+      guardarDatos('recolecta_reportes', reportes);
+      cerrarModal('modalReporte');
+      mostrarMensaje('¡Reporte enviado!', 'success');
+      mostrarReportes();
+      actualizarMisSolicitudes();
+    }
+
+    // ===== RECOLECCIONES =====
+    function servicioRecoleccion() {
+      if (!usuarioActual) {
+        mostrarMensaje('Debes iniciar sesión', 'info');
+        mostrarLogin();
+        return;
+      }
+      abrirModal('modalRecoleccion');
+    }
+
+    function submitRecoleccion() {
+      const datos = {
+        nombre: document.getElementById('recolNombre').value.trim(),
+        direccion: document.getElementById('recolDireccion').value.trim(),
+        telefono: document.getElementById('recolTelefono').value.trim(),
+        tipo: document.getElementById('recolTipo').value,
+        cantidad: document.getElementById('recolCantidad').value,
+        fecha: document.getElementById('recolFecha').value,
+        notas: document.getElementById('recolNotas').value.trim()
+      };
+      
+      if (!datos.nombre || !datos.direccion || !datos.telefono || !datos.tipo) {
+        mostrarMensaje('Completa los campos obligatorios', 'error');
+        return;
+      }
+      
+      if (!validarTelefono(datos.telefono)) {
+        mostrarMensaje('Teléfono inválido (10 dígitos)', 'error');
+        return;
+      }
+      
+      const recolecciones = obtenerDatos('recolecta_solicitudes');
+      recolecciones.push({
+        id: generarId(),
+        ...datos,
+        usuario: usuarioActual.email,
+        fechaSolicitud: new Date().toLocaleString('es-DO'),
+        estado: 'pendiente'
+      });
+      
+      guardarDatos('recolecta_solicitudes', recolecciones);
+      cerrarModal('modalRecoleccion');
+      mostrarMensaje('¡Solicitud enviada!', 'success');
+      actualizarMisSolicitudes();
+    }
+
+    // ===== BRIGADAS =====
+    function servicioBrigada() {
+      if (!usuarioActual) {
+        mostrarMensaje('Debes iniciar sesión', 'info');
+        mostrarLogin();
+        return;
+      }
+      abrirModal('modalBrigada');
+    }
+
+    function submitBrigada() {
+      const datos = {
+        nombre: document.getElementById('brigNombre').value.trim(),
+        telefono: document.getElementById('brigTelefono').value.trim(),
+        lugar: document.getElementById('brigLugar').value.trim(),
+        ciudad: document.getElementById('brigCiudad').value,
+        fecha: document.getElementById('brigFecha').value,
+        personas: document.getElementById('brigPersonas').value,
+        descripcion: document.getElementById('brigDescripcion').value.trim()
+      };
+      
+      if (!datos.nombre || !datos.telefono || !datos.lugar || !datos.ciudad) {
+        mostrarMensaje('Completa los campos obligatorios', 'error');
+        return;
+      }
+      
+      const brigadas = obtenerDatos('recolecta_brigadas');
+      brigadas.push({
+        id: generarId(),
+        ...datos,
+        usuario: usuarioActual.email,
+        fechaSolicitud: new Date().toLocaleString('es-DO'),
+        estado: 'pendiente'
+      });
+      
+      guardarDatos('recolecta_brigadas', brigadas);
+      cerrarModal('modalBrigada');
+      mostrarMensaje('¡Brigada coordinada!', 'success');
+      actualizarMisSolicitudes();
+    }
+
+    // ===== MIS SOLICITUDES =====
+    function actualizarMisSolicitudes() {
+      const container = document.getElementById('misSolicitudesContent');
+      
+      if (!usuarioActual) {
+        container.innerHTML = `
+          <div class="auth-required">
+            <h3>Inicia sesión para ver tus solicitudes</h3>
+            <button onclick="mostrarLogin()">Iniciar Sesión</button>
+          </div>
+        `;
+        return;
+      }
+      
+      const recolecciones = obtenerDatos('recolecta_solicitudes').filter(r => r.usuario === usuarioActual.email);
+      const brigadas = obtenerDatos('recolecta_brigadas').filter(b => b.usuario === usuarioActual.email);
+      const reportes = obtenerDatos('recolecta_reportes').filter(r => r.usuario === usuarioActual.email);
+      
+      let html = '<div class="tabs">';
+      html += '<button class="tab active" onclick="cambiarTab(event, \'tabRecolecciones\')">Recolecciones</button>';
+      html += '<button class="tab" onclick="cambiarTab(event, \'tabBrigadas\')">Brigadas</button>';
+      html += '<button class="tab" onclick="cambiarTab(event, \'tabMisReportes\')">Mis Reportes</button>';
+      html += '</div>';
+      
+      // Recolecciones
+      html += '<div id="tabRecolecciones" class="tab-content active">';
+      if (recolecciones.length === 0) {
+        html += '<p style="color: #666;">No has solicitado recolecciones.</p>';
+      } else {
+        recolecciones.reverse().forEach(r => {
+          html += `
+            <div class="solicitud-item">
+              <h4>Recolección #${r.id.substr(-6)} <span class="status-badge status-${r.estado}">${r.estado.toUpperCase()}</span></h4>
+              <p><strong>Tipo:</strong> ${r.tipo}</p>
+              <p><strong>Dirección:</strong> ${r.direccion}</p>
+              <p><strong>Teléfono:</strong> ${r.telefono}</p>
+              ${r.fecha ? `<p><strong>Fecha:</strong> ${r.fecha}</p>` : ''}
+              ${r.notas ? `<p><strong>Notas:</strong> ${r.notas}</p>` : ''}
+              <small style="color: #666;">Solicitado: ${r.fechaSolicitud}</small>
+            </div>
+          `;
+        });
+      }
+      html += '</div>';
+      
+      // Brigadas
+      html += '<div id="tabBrigadas" class="tab-content">';
+      if (brigadas.length === 0) {
+        html += '<p style="color: #666;">No has coordinado brigadas.</p>';
+      } else {
+        brigadas.reverse().forEach(b => {
+          html += `
+            <div class="brigada-item">
+              <h4>Brigada #${b.id.substr(-6)} <span class="status-badge status-${b.estado}">${b.estado.toUpperCase()}</span></h4>
+              <p><strong>Lugar:</strong> ${b.lugar}</p>
+              <p><strong>Ciudad:</strong> ${b.ciudad}</p>
+              <p><strong>Contacto:</strong> ${b.nombre} - ${b.telefono}</p>
+              ${b.fecha ? `<p><strong>Fecha:</strong> ${b.fecha}</p>` : ''}
+              ${b.personas ? `<p><strong>Participantes:</strong> ${b.personas}</p>` : ''}
+              <small style="color: #666;">Solicitado: ${b.fechaSolicitud}</small>
+            </div>
+          `;
+        });
+      }
+      html += '</div>';
+      
+      // Reportes
+      html += '<div id="tabMisReportes" class="tab-content">';
+      if (reportes.length === 0) {
+        html += '<p style="color: #666;">No has realizado reportes.</p>';
+      } else {
+        reportes.reverse().forEach(r => {
+          html += `
+            <div class="reporte-item">
+              <h4>${r.titulo} <span class="status-badge status-${r.estado}">${r.estado.toUpperCase()}</span></h4>
+              <p><strong>Ciudad:</strong> ${r.ciudad}</p>
+              <p>${r.descripcion}</p>
+              ${r.foto ? `<img src="${r.foto}" style="max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 5px;">` : ''}
+              <small style="color: #666;">${r.fecha}</small>
+            </div>
+          `;
+        });
+      }
+      html += '</div>';
+      
+      container.innerHTML = html;
+    }
+
+    function cambiarTab(event, tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // ===== MODALES =====
+    function abrirModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+      document.body.style.overflow = 'auto';
+      const modal = document.getElementById(modalId);
+      const form = modal.querySelector('form');
+      if (form) {
+        form.reset();
+        const preview = modal.querySelector('.image-preview');
+        if (preview) preview.classList.remove('show');
+      }
+    }
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        cerrarModal(event.target.id);
+      }
+    }
+
+    // ===== UI =====
+    function mostrarMensaje(mensaje, tipo = 'success') {
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = mensaje;
+      feedback.className = tipo;
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 5000);
+    }
+
+    function scrollToSection(sectionId) {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function previewImagen() {
+      const file = document.getElementById('repFoto').files[0];
+      const preview = document.getElementById('repFotoPreview');
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.classList.add('show');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.classList.remove('show');
+      }
+    }
+
+    function actualizarTodo() {
+      mostrarReportes();
+      actualizarMisSolicitudes();
+      mostrarMensaje('Actualizado correctamente', 'success');
+    }
+
+    // ===== INICIALIZACIÓN =====
+    function inicializarApp() {
+      cargarUsuario();
+
+      // Esperar a que CONFIG esté listo y llenar selects
+      const llenarSelects = () => {
+        if (!configCargada || !CONFIG.ciudades || CONFIG.ciudades.length === 0) {
+          setTimeout(llenarSelects, 100);
+          return;
+        }
+
+        const selects = [document.getElementById('ciudad'), document.getElementById('brigCiudad'), document.getElementById('repCiudad')];
+        selects.forEach(select => {
+          if (!select) return;
+          select.innerHTML = '<option value="Todas">Todas las Ciudades</option>';
+          CONFIG.ciudades.forEach(ciudad => {
+            const option = document.createElement('option');
+            option.value = ciudad;
+            option.textContent = ciudad;
+            select.appendChild(option);
+          });
+        });
+
+        mostrarReportes();
+        actualizarMisSolicitudes();
+
+        // Inicializar mapa cuando Leaflet esté listo
+        if (typeof L !== 'undefined') {
+          setTimeout(inicializarMapa, 500);
+        }
+
+        // Botón reportar
+        const btnReportar = document.getElementById('btnReportarProblematica');
+        if (btnReportar) {
+          btnReportar.onclick = () => {
+            if (!usuarioActual) {
+              mostrarMensaje('Debes iniciar sesión para reportar', 'info');
+              mostrarLogin();
+              return;
+            }
+            scrollToSection('reportes');
+            setTimeout(() => nuevoReporte(), 500);
+          };
+        }
+      };
+
+      llenarSelects();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      inicializarApp();
+    });
+  </script>
+</body>
+</html>
