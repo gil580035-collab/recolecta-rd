@@ -1,0 +1,133 @@
+{
+  "app": {
+    "nombre": "RECOLECTA-RD",
+    "version": "1.0.0",
+    "descripcion": "Sistema de gestión de recolección de residuos - República Dominicana"
+  },
+  "backgroundImages": [
+    "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1600",
+    "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=1600",
+    "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1600"
+  ],
+  "backgroundInterval": 5000,
+  "mapCenter": [18.7357, -70.1627],
+  "mapZoom": 8,
+  "ciudades": [
+    "Santo Domingo",
+    "Santiago",
+    "La Vega",
+    "San Cristóbal",
+    "San Francisco de Macorís",
+    "Puerto Plata",
+    "La Romana",
+    "San Pedro de Macorís",
+    "Higüey",
+    "Moca",
+    "Bonao",
+    "Bani",
+    "Barahona",
+    "Duarte",
+    "El Seibo",
+    "Monte Plata"    
+  ],
+  "tiposReciclables": [
+    "Plástico",
+    "Papel",
+    "Cartón",
+    "Vidrio",
+    "Metal",
+    "Orgánico",
+    "Electrónico"
+  ],
+  "centrosAcopio": [
+    {
+      "id": 1,
+      "nombre": "Centro Acopio Santo Domingo Este",
+      "lat": 18.4861,
+      "lng": -69.9312,
+      "tipos": "Plástico, Papel, Vidrio, Metal",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0001",
+      "direccion": "Av. Independencia 123"
+    },
+    {
+      "id": 2,
+      "nombre": "Centro Acopio Santiago",
+      "lat": 19.4517,
+      "lng": -70.6970,
+      "tipos": "Plástico, Papel, Cartón",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0002",
+      "direccion": "Calle 27 de Febrero 456"
+    },
+    {
+      "id": 3,
+      "nombre": "Centro Acopio La Vega",
+      "lat": 19.2231,
+      "lng": -70.5290,
+      "tipos": "Plástico, Vidrio, Metal",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0003",
+      "direccion": "Av. Vega 789"
+    },
+    {
+      "id": 4,
+      "nombre": "Centro Acopio San Cristóbal",
+      "lat": 18.4167,
+      "lng": -70.1000,
+      "tipos": "Papel, Cartón, Plástico",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0004",
+      "direccion": "Calle Principal 321"
+    },
+    {
+      "id": 5,
+      "nombre": "Centro Acopio Puerto Plata",
+      "lat": 19.7833,
+      "lng": -70.6833,
+      "tipos": "Plástico, Vidrio",
+      "horario": "Lun-Sáb 8:00-18:00",
+      "telefono": "809-555-0005",
+      "direccion": "Av. Costanera 654"
+    },
+    {
+      "id": 6,
+      "nombre": "Centro Acopio La Romana",
+      "lat": 18.4273,
+      "lng": -68.9728,
+      "tipos": "Todo tipo de reciclables",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0006",
+      "direccion": "Calle La Romana 987"
+    },
+    {
+      "id": 7,
+      "nombre": "Centro Acopio San Pedro",
+      "lat": 18.4539,
+      "lng": -69.3028,
+      "tipos": "Plástico, Papel, Metal",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0007",
+      "direccion": "Av. San Pedro 147"
+    },
+    {
+      "id": 8,
+      "nombre": "Centro Acopio Higüey",
+      "lat": 18.6150,
+      "lng": -68.7078,
+      "tipos": "Plástico, Papel",
+      "horario": "Lun-Sáb 8:00-17:00",
+      "telefono": "809-555-0008",
+      "direccion": "Calle Higüey 258"
+    }
+  ],
+  "estadosReporte": [
+    "pendiente",
+    "en proceso",
+    "completado"
+  ],
+  "validacion": {
+    "passwordMinLength": 6,
+    "telefonoFormat": "809-XXX-XXXX"
+  }
+}
